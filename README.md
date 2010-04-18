@@ -117,6 +117,12 @@ With unicorn, you can just do:
 
     $ unicorn
 
+##### github post-receive hooks
+
+Toto supports [GitHub Post-Receive Hooks](http://help.github.com/post-receive-hooks/).
+
+If enabled, any POST to `/hook` will update the server's local repository.
+
 #### on heroku
 
 Toto was designed to work well with [heroku](http://heroku.com), it makes the most out of it's state-of-the-art caching,
@@ -143,6 +149,7 @@ you could add `set :author, 'John Galt'` inside the `Toto::Server.new` block. He
     set :summary,     :max => 150, :delim => /~\n/              # length of article summary and delimiter
     set :ext,         'txt'                                     # file extension for articles
     set :cache,       28800                                     # cache site for 8 hours
+    set :post_receive,:on => false                              # post-receive hook configuration
 
     set :to_html   do |path, page, ctx|                         # returns an html, from a path & context
       ERB.new(File.read("#{path}/#{page}.rhtml")).result(ctx)

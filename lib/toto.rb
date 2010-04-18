@@ -52,6 +52,18 @@ module Toto
     end
   end
 
+  class Hook
+    def self.go route, params, config
+      payload = params['payload'].to_s
+      if config[:post_receive][:on] && route == ["hook"] && !payload.empty?
+        `git fetch origin && git reset --merge`
+        return [200, {}, []]
+      else
+        return [400, {}, []]
+      end
+    end
+  end
+
   class Site
     def initialize config
       @config = config
@@ -288,6 +300,7 @@ module Toto
       :summary => {:max => 150, :delim => /~\n/},           # length of summary and delimiter
       :ext => 'txt',                                        # extension for articles
       :cache => 28800,                                      # cache duration (seconds)
+      :post_receive => {:on => false},                      # post-receive hook configuration
       :github => {:user => "", :repos => [], :ext => 'md'}, # Github username and list of repos
       :to_html => lambda {|path, page, ctx|                 # returns an html, from a path & context
         ERB.new(File.read("#{path}/#{page}.rhtml")).result(ctx)
@@ -323,10 +336,14 @@ module Toto
       @request  = Rack::Request.new env
       @response = Rack::Response.new
 
-      return [400, {}, []] unless @request.get?
+      return [400, {}, []] unless @request.get? or @request.post?
 
       path, mime = @request.path_info.split('.')
       route = (path || '/').split('/').reject {|i| i.empty? }
+
+      if @request.post?
+        return Toto::Hook.go(route, @request.POST, @config)
+      end
 
       response = @site.go(route, *(mime ? mime : []))
 

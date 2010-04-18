@@ -270,6 +270,26 @@ context Toto do
   context "extensions to the core Ruby library" do
     should("respond to iso8601") { Date.today }.respond_to?(:iso8601)
   end
+
+  context "testing post-receive hooks" do
+    context "are disabled" do
+      setup do
+        @config[:post_receive] = {:on => false}
+        @toto.post('/hook')
+      end
+      should("not update repository") { topic.status }.equals 400
+    end
+    context "are enabled" do
+      setup do
+        @config[:post_receive] = {:on => true}
+        @toto.post('/hook', :payload => 'foo')
+      end
+      # TODO - this test currently fails because the POST param "payload" is not
+      #        being sent via the MockRequest
+      should("update repository") { topic.status }.equals 200
+    end
+  end
+
 end
 
 
